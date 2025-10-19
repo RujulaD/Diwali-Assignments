@@ -1,0 +1,196 @@
+Day 1- MYSQL
+Q1. Display top 5 highest salary earners in each dept 
+Ans- 
+mysql> SELECT EMPNO, ENAME, SAL, DEPTNO
+    -> FROM (
+    ->     SELECT *,
+    ->            ROW_NUMBER() OVER (PARTITION BY DEPTNO ORDER BY SAL DESC) AS rn
+    ->     FROM emp
+    -> ) AS ranked
+    -> WHERE rn <= 5
+    -> ORDER BY DEPTNO, SAL DESC;
++-------+----------+------+--------+
+| EMPNO | ENAME    | SAL  | DEPTNO |
++-------+----------+------+--------+
+|  7839 | KING     | 5000 |     10 |
+|  7415 | AARAV    | 3350 |     10 |
+|  7782 | CLARK    | 2450 |     10 |
+|  7421 | THOMAS   | 1750 |     10 |
+|  7934 | MILLER   | 1300 |     10 |
+|  7840 | FRED     | 5000 |     20 |
+|  7788 | SCOTT    | 3000 |     20 |
+|  7902 | FORD     | 3000 |     20 |
+|  7566 | JONES    | 2975 |     20 |
+|  6473 | SHARMIN  | 1750 |     20 |
+|  7919 | HOFFMAN  | 4150 |     30 |
+|  7698 | BLAKE    | 2850 |     30 |
+|  7920 | GRASS    | 2575 |     30 |
+|  6001 | GITA     | 1750 |     30 |
+|  8433 | NATASHA  | 1750 |     30 |
+|  6129 | VRUSHALI | 1750 |     50 |
+|  9400 | SANGITA  | 1750 |     50 |
+|  9473 | SUPRIYA  | 1750 |     50 |
++-------+----------+------+--------+
+18 rows in set (0.00 sec)
+
+------------------------------------------------------------------------------------------------------
+
+Q 2. Write a stored function getWorkingDays which accepts joining data and returns the no of working days 
+Ans-
+stored function:
+DROP FUNCTION IF EXISTS getWorkingDays;
+DELIMITER $$
+
+CREATE FUNCTION getWorkingDays(joinDate DATE)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE total_days INT;
+    DECLARE weekend_days INT;
+    DECLARE working_days INT;
+    DECLARE start_dow INT;
+    DECLARE extra_days INT;
+
+    
+    SET total_days = DATEDIFF(CURDATE(), joinDate) + 1;
+
+    IF total_days <= 0 THEN
+        RETURN 0;
+    END IF;
+
+  
+    SET weekend_days = (total_days DIV 7) * 2;
+
+   
+    SET start_dow = DAYOFWEEK(joinDate); 
+    SET extra_days = total_days MOD 7;
+
+    WHILE extra_days > 0 DO
+        IF start_dow = 1 OR start_dow = 7 THEN
+            SET weekend_days = weekend_days + 1;
+        END IF;
+        SET start_dow = start_dow + 1;
+        IF start_dow > 7 THEN
+            SET start_dow = 1;
+        END IF;
+        SET extra_days = extra_days - 1;
+    END WHILE;
+
+  
+    SET working_days = total_days - weekend_days;
+
+    RETURN working_days;
+END$$
+
+DELIMITER ;
+
+mysql> table Employee;
++-------+----------+------------+---------+--------+
+| EMPNO | ENAME    | HIREDATE   | SAL     | DEPTNO |
++-------+----------+------------+---------+--------+
+|  6001 | GITA     | 2023-01-10 | 1750.00 |     30 |
+|  6129 | VRUSHALI | 2022-06-15 | 1750.00 |     50 |
+|  6473 | SHARMIN  | 2023-03-01 | 1750.00 |     20 |
+|  6781 | BANDISH  | 2023-02-20 | 1750.00 |     20 |
+|  7369 | SMITH    | 2023-04-15 |  800.00 |     20 |
+|  7415 | AARAV    | 2023-05-01 | 3350.00 |     10 |
+|  7421 | THOMAS   | 2023-03-25 | 1750.00 |     10 |
+|  7499 | ALLEN    | 2023-01-05 | 1600.00 |     30 |
+|  7521 | WARD     | 2023-02-10 | 1250.00 |     30 |
+|  7566 | JONES    | 2022-12-01 | 2975.00 |     20 |
++-------+----------+------------+---------+--------+
+10 rows in set (0.00 sec)
+
+mysql> source C:/Java program/function2.sql;
+Query OK, 0 rows affected (0.02 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT EMPNO, ENAME, HIREDATE, getWorkingDays(HIREDATE) AS WorkingDays
+    -> FROM Employee;
++-------+----------+------------+-------------+
+| EMPNO | ENAME    | HIREDATE   | WorkingDays |
++-------+----------+------------+-------------+
+|  6001 | GITA     | 2023-01-10 |         724 |
+|  6129 | VRUSHALI | 2022-06-15 |         873 |
+|  6473 | SHARMIN  | 2023-03-01 |         688 |
+|  6781 | BANDISH  | 2023-02-20 |         695 |
+|  7369 | SMITH    | 2023-04-15 |         655 |
+|  7415 | AARAV    | 2023-05-01 |         645 |
+|  7421 | THOMAS   | 2023-03-25 |         670 |
+|  7499 | ALLEN    | 2023-01-05 |         727 |
+|  7521 | WARD     | 2023-02-10 |         701 |
+|  7566 | JONES    | 2022-12-01 |         752 |
++-------+----------+------------+-------------+
+10 rows in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------------------
+Q3. Write a stored procedure which updates the salary of a given emp based on no of working days. Give differential salary
+rise based on no of working days. 
+Ans:
+stored procedure:
+DROP PROCEDURE IF EXISTS updateSalaryByWorkingDays;
+DELIMITER $$
+
+CREATE PROCEDURE updateSalaryByWorkingDays(IN p_empno INT)
+BEGIN
+    DECLARE v_working_days INT;
+    DECLARE v_current_salary DECIMAL(10,2);
+    DECLARE v_new_salary DECIMAL(10,2);
+    DECLARE v_join_date DATE;
+
+    -- Check if employee exists
+    IF NOT EXISTS (SELECT 1 FROM Employee WHERE EMPNO = p_empno) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Employee not found';
+    END IF;
+
+    -- Fetch salary and joining date
+    SELECT salary, HIREDATE INTO v_current_salary, v_join_date
+    FROM Employee
+    WHERE EMPNO = p_empno;
+
+    -- Calculate working days
+    SET v_working_days = getWorkingDays(v_join_date);
+
+    -- Apply salary increment
+    IF v_working_days > 300 THEN
+        SET v_new_salary = v_current_salary * 1.15;
+    ELSEIF v_working_days BETWEEN 200 AND 300 THEN
+        SET v_new_salary = v_current_salary * 1.10;
+    ELSE
+        SET v_new_salary = v_current_salary * 1.05;
+    END IF;
+
+    -- Update salary
+    UPDATE Employee
+    SET salary = v_new_salary
+    WHERE EMPNO = p_empno;
+END$$
+
+DELIMITER ;
+
+
+mysql> source C:/Java program/function3.sql;
+Query OK, 0 rows affected (0.01 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT EMPNO, ENAME, salary, HIREDATE FROM Employee WHERE EMPNO = 6001;
++-------+-------+---------+------------+
+| EMPNO | ENAME | salary  | HIREDATE   |
++-------+-------+---------+------------+
+|  6001 | GITA  | 1750.00 | 2023-01-10 |
++-------+-------+---------+------------+
+1 row in set (0.00 sec)
+
+mysql> CALL updateSalaryByWorkingDays(6001);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT EMPNO, ENAME, salary, HIREDATE FROM Employee WHERE EMPNO = 6001;
++-------+-------+---------+------------+
+| EMPNO | ENAME | salary  | HIREDATE   |
++-------+-------+---------+------------+
+|  6001 | GITA  | 2012.50 | 2023-01-10 |
++-------+-------+---------+------------+
+1 row in set (0.00 sec)
