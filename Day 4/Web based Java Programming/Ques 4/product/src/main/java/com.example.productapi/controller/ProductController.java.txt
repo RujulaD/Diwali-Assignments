@@ -1,0 +1,57 @@
+package com.example.productapi.controller;
+
+import com.example.productapi.entity.Product;
+import com.example.productapi.service.ProductService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) { this.productService = productService; }
+
+    // (a) Display all products with category info
+    @GetMapping
+    public ResponseEntity<List<Product>> getAllProducts() {
+        List<Product> list = productService.getAllProducts();
+        return ResponseEntity.ok(list);
+    }
+
+    // (b) Insert new product
+    // Expect JSON body like:
+    // {
+    //   "name": "New Prod",
+    //   "price": 99.99,
+    //   "category": { "categoryId": 1 }    // or { "name": "NewCategory" }
+    // }
+    @PostMapping
+    public ResponseEntity<Product> addProduct(@RequestBody Product product) {
+        Product saved = productService.addProduct(product);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    }
+
+    // (c) Display products having price in given range
+    // GET /api/products/range?min=10&max=100
+    @GetMapping("/range")
+    public ResponseEntity<List<Product>> getProductsInRange(@RequestParam double min, @RequestParam double max) {
+        List<Product> list = productService.getProductsInPriceRange(min, max);
+        return ResponseEntity.ok(list);
+    }
+
+    // (d) Update product price for given product_id
+    // PUT /api/products/{id}/price?price=120.50
+    @PutMapping("/{id}/price")
+    public ResponseEntity<?> updatePrice(@PathVariable("id") Long id, @RequestParam double price) {
+        Product updated = productService.updateProductPrice(id, price);
+        if (updated == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found with id: " + id);
+        }
+        return ResponseEntity.ok(updated);
+    }
+}

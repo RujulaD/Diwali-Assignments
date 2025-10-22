@@ -1,0 +1,15 @@
+CREATE DATABASE IF NOT EXISTS book_db;
+
+USE book_db;
+
+CREATE TABLE Books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    author VARCHAR(100) NOT NULL,
+    publisher VARCHAR(100),
+    price DOUBLE
+);
+
+-- Sample book
+INSERT INTO Books (title, author, publisher, price) VALUES
+('Java Basics', 'John Doe', 'Tech Books', 299.99);

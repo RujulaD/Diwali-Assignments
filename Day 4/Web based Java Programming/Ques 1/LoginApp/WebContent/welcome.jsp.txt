@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome</title>
+</head>
+<body>
+<h2>Welcome, <%= request.getAttribute("login_id") %>!</h2>
+<p>You have successfully logged in.</p>
+</body>
+</html>

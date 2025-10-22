@@ -1,0 +1,49 @@
+package com.example.servlet;
+
+import com.example.util.DBConnection;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+@WebServlet("/login")
+public class LoginServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String loginId = request.getParameter("login_id");
+        String password = request.getParameter("password");
+
+        try {
+            Connection conn = DBConnection.getConnection();
+            String sql = "SELECT * FROM Users WHERE login_id=? AND password=?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setString(1, loginId);
+            pst.setString(2, password);
+
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                // Login successful
+                request.setAttribute("login_id", loginId);
+                request.getRequestDispatcher("welcome.jsp").forward(request, response);
+            } else {
+                // Login failed
+                request.setAttribute("errorMessage", "Invalid login ID or password");
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+            }
+
+            rs.close();
+            pst.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Database connection error");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+        }
+    }
+}

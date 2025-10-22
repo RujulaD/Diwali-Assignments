@@ -1,0 +1,162 @@
+package com.example;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet("/books")
+public class BookServlet extends HttpServlet {
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+
+        String action = request.getParameter("action");
+
+        if (action == null) action = "list";
+
+        try {
+            switch (action) {
+                case "new":
+                    request.getRequestDispatcher("addBook.jsp").forward(request, response);
+                    break;
+                case "edit":
+                    showEditForm(request, response);
+                    break;
+                case "delete":
+                    deleteBook(request, response);
+                    break;
+                default:
+                    listBooks(request, response);
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Database error: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+
+        String id = request.getParameter("id");
+        String title = request.getParameter("title");
+        String author = request.getParameter("author");
+        String publisher = request.getParameter("publisher");
+        double price = Double.parseDouble(request.getParameter("price"));
+
+        try {
+            if (id == null || id.isEmpty()) {
+                insertBook(title, author, publisher, price);
+            } else {
+                updateBook(Integer.parseInt(id), title, author, publisher, price);
+            }
+            response.sendRedirect("books");
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Database error: " + e.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response);
+        }
+    }
+
+    private void listBooks(HttpServletRequest request, HttpServletResponse response) 
+            throws SQLException, ClassNotFoundException, ServletException, IOException {
+
+        Connection conn = DBConnection.getConnection();
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT * FROM Books");
+
+        List<Book> bookList = new ArrayList<>();
+        while (rs.next()) {
+            Book b = new Book(
+                rs.getInt("id"),
+                rs.getString("title"),
+                rs.getString("author"),
+                rs.getString("publisher"),
+                rs.getDouble("price")
+            );
+            bookList.add(b);
+        }
+
+        request.setAttribute("bookList", bookList);
+        request.getRequestDispatcher("books.jsp").forward(request, response);
+
+        rs.close();
+        stmt.close();
+        conn.close();
+    }
+
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, ClassNotFoundException, ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Connection conn = DBConnection.getConnection();
+        PreparedStatement pst = conn.prepareStatement("SELECT * FROM Books WHERE id=?");
+        pst.setInt(1, id);
+        ResultSet rs = pst.executeQuery();
+        Book book = null;
+        if (rs.next()) {
+            book = new Book(
+                rs.getInt("id"),
+                rs.getString("title"),
+                rs.getString("author"),
+                rs.getString("publisher"),
+                rs.getDouble("price")
+            );
+        }
+        request.setAttribute("book", book);
+        request.getRequestDispatcher("editBook.jsp").forward(request, response);
+        rs.close();
+        pst.close();
+        conn.close();
+    }
+
+    private void insertBook(String title, String author, String publisher, double price)
+            throws SQLException, ClassNotFoundException {
+
+        Connection conn = DBConnection.getConnection();
+        PreparedStatement pst = conn.prepareStatement(
+            "INSERT INTO Books (title, author, publisher, price) VALUES (?, ?, ?, ?)"
+        );
+        pst.setString(1, title);
+        pst.setString(2, author);
+        pst.setString(3, publisher);
+        pst.setDouble(4, price);
+        pst.executeUpdate();
+        pst.close();
+        conn.close();
+    }
+
+    private void updateBook(int id, String title, String author, String publisher, double price)
+            throws SQLException, ClassNotFoundException {
+
+        Connection conn = DBConnection.getConnection();
+        PreparedStatement pst = conn.prepareStatement(
+            "UPDATE Books SET title=?, author=?, publisher=?, price=? WHERE id=?"
+        );
+        pst.setString(1, title);
+        pst.setString(2, author);
+        pst.setString(3, publisher);
+        pst.setDouble(4, price);
+        pst.setInt(5, id);
+        pst.executeUpdate();
+        pst.close();
+        conn.close();
+    }
+
+    private void deleteBook(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, ClassNotFoundException, IOException {
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        Connection conn = DBConnection.getConnection();
+        PreparedStatement pst = conn.prepareStatement("DELETE FROM Books WHERE id=?");
+        pst.setInt(1, id);
+        pst.executeUpdate();
+        pst.close();
+        conn.close();
+        response.sendRedirect("books");
+    }
+}

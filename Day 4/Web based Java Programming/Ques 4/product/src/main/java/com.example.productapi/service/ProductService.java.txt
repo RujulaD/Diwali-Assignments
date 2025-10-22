@@ -1,0 +1,66 @@
+package com.example.productapi.service;
+
+import com.example.productapi.entity.Category;
+import com.example.productapi.entity.Product;
+import com.example.productapi.repository.CategoryRepository;
+import com.example.productapi.repository.ProductRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class ProductService {
+
+    private final ProductRepository productRepo;
+    private final CategoryRepository categoryRepo;
+
+    public ProductService(ProductRepository productRepo, CategoryRepository categoryRepo) {
+        this.productRepo = productRepo;
+        this.categoryRepo = categoryRepo;
+    }
+
+    public List<Product> getAllProducts() {
+        return productRepo.findAll();
+    }
+
+    @Transactional
+    public Product addProduct(Product product) {
+        // If category object contains id, use it; else try to resolve by name or save new category
+        Category cat = product.getCategory();
+        if (cat != null) {
+            if (cat.getCategoryId() != null) {
+                Optional<Category> existing = categoryRepo.findById(cat.getCategoryId());
+                existing.ifPresent(product::setCategory);
+            } else if (cat.getName() != null) {
+                Category found = categoryRepo.findByName(cat.getName());
+                if (found != null) {
+                    product.setCategory(found);
+                } else {
+                    // save new category
+                    Category saved = categoryRepo.save(cat);
+                    product.setCategory(saved);
+                }
+            }
+        }
+        return productRepo.save(product);
+    }
+
+    public List<Product> getProductsInPriceRange(double min, double max) {
+        return productRepo.findByPriceBetween(min, max);
+    }
+
+    @Transactional
+    public Product updateProductPrice(Long productId, double newPrice) {
+        Optional<Product> optional = productRepo.findById(productId);
+        if (optional.isPresent()) {
+            Product p = optional.get();
+            p.setPrice(newPrice);
+            return productRepo.save(p);
+        } else {
+            return null; // caller handles not found
+        }
+    }
+}
+

@@ -1,0 +1,48 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Customer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        form { max-width: 400px; }
+        label { display: block; margin-top: 10px; }
+        input[type="text"], input[type="email"] {
+            width: 100%; padding: 8px; box-sizing: border-box;
+        }
+        input[type="submit"] {
+            margin-top: 15px; padding: 8px 15px;
+            background-color: #4CAF50; color: white; border: none; cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        a { text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+
+<h2>Add New Customer</h2>
+
+<form:form action="${pageContext.request.contextPath}/customers" modelAttribute="customer" method="post">
+    <label>Name:</label>
+    <form:input path="name" required="true"/>
+
+    <label>Email:</label>
+    <form:input path="email" type="email" required="true"/>
+
+    <label>Phone:</label>
+    <form:input path="phone" required="true"/>
+
+    <label>Address:</label>
+    <form:input path="address" required="true"/>
+
+    <input type="submit" value="Save"/>
+</form:form>
+
+<br>
+<a href="${pageContext.request.contextPath}/customers">Back to Customer List</a>
+
+</body>
+</html>

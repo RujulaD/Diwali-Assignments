@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 100px;
+        }
+        .error-message {
+            color: red;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>Error Occurred</h2>
+    <div class="error-message">
+        <% 
+            String message = (String) request.getAttribute("errorMessage");
+            if(message != null) {
+                out.print(message);
+            } else {
+                out.print("An unexpected error occurred. Please try again.");
+            }
+        %>
+    </div>
+    <a href="login.jsp">Go back to Login</a>
+</body>
+</html>

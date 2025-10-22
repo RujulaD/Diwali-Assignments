@@ -1,0 +1,50 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Customer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        form { max-width: 400px; }
+        label { display: block; margin-top: 10px; }
+        input[type="text"], input[type="email"] {
+            width: 100%; padding: 8px; box-sizing: border-box;
+        }
+        input[type="submit"] {
+            margin-top: 15px; padding: 8px 15px;
+            background-color: #2196F3; color: white; border: none; cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0b7dda;
+        }
+        a { text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+
+<h2>Edit Customer</h2>
+
+<form:form action="${pageContext.request.contextPath}/customers/update" modelAttribute="customer" method="post">
+    <form:hidden path="id"/>
+
+    <label>Name:</label>
+    <form:input path="name" required="true"/>
+
+    <label>Email:</label>
+    <form:input path="email" type="email" required="true"/>
+
+    <label>Phone:</label>
+    <form:input path="phone" required="true"/>
+
+    <label>Address:</label>
+    <form:input path="address" required="true"/>
+
+    <input type="submit" value="Update"/>
+</form:form>
+
+<br>
+<a href="${pageContext.request.contextPath}/customers">Back to Customer List</a>
+
+</body>
+</html>

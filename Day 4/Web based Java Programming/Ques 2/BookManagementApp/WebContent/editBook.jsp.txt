@@ -1,0 +1,23 @@
+<%@ page import="com.example.Book" %>
+<%
+    Book book = (Book)request.getAttribute("book");
+%>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Book</title>
+</head>
+<body>
+<h2>Edit Book</h2>
+<form method="post" action="books">
+    <input type="hidden" name="id" value="<%= book.getId() %>">
+    <label>Title:</label><input type="text" name="title" value="<%= book.getTitle() %>" required><br><br>
+    <label>Author:</label><input type="text" name="author" value="<%= book.getAuthor() %>" required><br><br>
+    <label>Publisher:</label><input type="text" name="publisher" value="<%= book.getPublisher() %>"><br><br>
+    <label>Price:</label><input type="number" name="price" step="0.01" value="<%= book.getPrice() %>" required><br><br>
+    <button type="submit">Update Book</button>
+</form>
+<a href="books">Back to List</a>
+</body>
+</html>
