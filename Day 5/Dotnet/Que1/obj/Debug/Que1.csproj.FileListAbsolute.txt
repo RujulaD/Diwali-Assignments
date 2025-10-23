@@ -1,0 +1,7 @@
+E:\dotnet\Solution assignment\Que1\bin\Debug\Que1.exe.config
+E:\dotnet\Solution assignment\Que1\bin\Debug\Que1.exe
+E:\dotnet\Solution assignment\Que1\bin\Debug\Que1.pdb
+E:\dotnet\Solution assignment\Que1\obj\Debug\Que1.csproj.AssemblyReference.cache
+E:\dotnet\Solution assignment\Que1\obj\Debug\Que1.csproj.CoreCompileInputs.cache
+E:\dotnet\Solution assignment\Que1\obj\Debug\Que1.exe
+E:\dotnet\Solution assignment\Que1\obj\Debug\Que1.pdb
